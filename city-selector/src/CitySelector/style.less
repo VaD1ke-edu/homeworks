@@ -2,4 +2,37 @@
     float: right;
 }
 
-// Your code...
+._selected {
+    background-color: #2ecc71;
+}
+
+.city-selector {
+    margin-top: 1rem;
+
+    &__btn {
+        vertical-align: top;
+        margin-right: 3rem;
+        height: 1.5rem;
+        cursor: pointer;
+    }
+
+    &__item {
+        display: inline-block;
+        margin-right: 3rem;
+        vertical-align: top;
+    }
+
+    &__list {
+        padding: 0;
+        margin-top: 0;
+    }
+
+    &__list-item {
+        padding: .5rem;
+        list-style-type: none;
+
+        &:hover {
+            cursor: pointer;
+        }
+    }
+}

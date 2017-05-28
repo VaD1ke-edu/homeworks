@@ -1,10 +1,25 @@
-const CitySelector = require('./CitySelector');
+"use strict";
 
-/* Пример создания компонента:
-const citySelector = new CitySelector({
-    elementId: 'citySelector',
-    regionsUrl: 'http://localhost:3000/regions',
-    localitiesUrl: 'http://localhost:3000/localities',
-    saveUrl: 'http://localhost:3000/selectedRegions'
+import CitySelector from  './CitySelector';
+import DataProvider from './DataProvider';
+
+let citySelectors = [];
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('createCitySelector').addEventListener('click', () => {
+        let provider     = new DataProvider('http://localhost:3000/');
+        let citySelector = new CitySelector(provider, 'info', 'citySelector', {});
+        citySelector.create();
+        citySelectors.push(citySelector);
+    });
+
+    document.getElementById('destroyCitySelector').addEventListener('click', () => {
+        if (!citySelectors.length) {
+            alert('no selectors');
+            return;
+        }
+        citySelectors[0].destroy();
+        citySelectors.shift();
+    });
 });
-*/
+
