@@ -6,9 +6,9 @@ import './style.less';
 import Mustache from 'mustache';
 
 /** Templates */
-import selectorTmpl from 'html-loader!./selector.html';
-import citiesTmpl   from 'html-loader!./cities.html';
-import regionsTmpl  from 'html-loader!./regions.html';
+import selectorTmpl from 'html-loader!./templates/selector.html';
+import citiesTmpl   from 'html-loader!./templates/cities.html';
+import regionsTmpl  from 'html-loader!./templates/regions.html';
 
 class CitySelector {
     /**
@@ -145,7 +145,7 @@ class CitySelector {
             'method': 'POST',
             'data'  : this.currentData,
             'async' : false
-        });
+        }).then(() => { this.destroy() });
     }
 
     _removeLocalities() {
