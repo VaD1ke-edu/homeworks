@@ -2,6 +2,7 @@
 
 import CitySelector from  './CitySelector';
 import DataProvider from './DataProvider';
+import InfoUpdater  from './InfoUpdater';
 
 let citySelectors = [];
 

@@ -37,9 +37,9 @@ class CitySelector {
     }
 
     create() {
-        CitySelector._appendHtml(this._getBlockElement(), selectorTmpl);
+        appendHtml(this._getBlockElement(), selectorTmpl);
 
-        let loadRegions = document.querySelector(this.regionsLoadBtn);
+        let loadRegions = this._getBlockElement().querySelector(this.regionsLoadBtn);
         loadRegions.addEventListener('click', () => {
             this._showRegions();
         });
@@ -89,7 +89,7 @@ class CitySelector {
         return this.sendApiRequest(this.apiMethods['regions'])
             .then((data) => {
                 let regionsHtml = Mustache.render(regionsTmpl, {regions: data});
-                CitySelector._appendHtml(this._getBlockElement().querySelector(this.regionBlock), regionsHtml);
+                appendHtml(this._getBlockElement().querySelector(this.regionBlock), regionsHtml);
 
                 let regionSelects = this._getBlockElement().querySelectorAll(this.regionItemSelect);
                 for (let index in regionSelects) {
@@ -120,7 +120,7 @@ class CitySelector {
                     return;
                 }
                 let citiesHtml = Mustache.render(citiesTmpl, {cities: data.list});
-                CitySelector._appendHtml(this._getBlockElement().querySelector(this.cityBlock), citiesHtml);
+                appendHtml(this._getBlockElement().querySelector(this.cityBlock), citiesHtml);
 
                 let citySelects = this._getBlockElement().querySelectorAll(this.cityItemSelect);
                 for (let index in citySelects) {
@@ -160,7 +160,10 @@ class CitySelector {
     }
 
     _getContainerElement() {
-        return document.getElementById(this.containerId);
+        if (!this.hasOwnProperty('container')) {
+            this.container = document.getElementById(this.containerId);
+        }
+        return this.container;
     }
 
     _getInfoElement() {
@@ -169,12 +172,14 @@ class CitySelector {
 
     _getBlockElement() {
         let container = this._getContainerElement();
-        if (!container.querySelector('#' + this._getBlockHash())) {
+
+        if (!this.hasOwnProperty('blockElem')) {
             let elem = document.createElement('div');
             elem.id = this._getBlockHash();
             container.append(elem);
+            this.blockElem = elem;
         }
-        return container.querySelector('#' + this._getBlockHash());
+        return this.blockElem;
     }
 
     _getBlockHash() {
@@ -230,17 +235,16 @@ class CitySelector {
         elem.classList.add('_selected');
         return this;
     }
+}
 
-
-    static _appendHtml(container, html) {
-        if (!html) {
-            return;
-        }
-        let elem = document.createElement('div');
-        elem.innerHTML = html;
-        while (elem.firstChild) {
-            container.appendChild(elem.firstChild);
-        }
+function appendHtml(container, html) {
+    if (!html) {
+        return;
+    }
+    let elem = document.createElement('div');
+    elem.innerHTML = html;
+    while (elem.firstChild) {
+        container.appendChild(elem.firstChild);
     }
 }
 
