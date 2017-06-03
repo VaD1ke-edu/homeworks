@@ -12,7 +12,7 @@ import regionsTmpl  from 'html-loader!./templates/regions.html';
 
 class CitySelector {
     /**
-     * Object initialization
+     * City selector constructor
      *
      * @param {DataProvider} provider      Data provider
      * @param {string}       infoElementId Info element html ID
@@ -34,9 +34,7 @@ class CitySelector {
         apiMethods = Object.assign({}, defaultApiMethods, apiMethods);
 
         this._initProperties(provider, infoElementId, containerId, apiMethods);
-    }
 
-    create() {
         appendHtml(this._getBlockElement(), selectorTmpl);
 
         let loadRegions = this._getBlockElement().querySelector(this.regionsLoadBtn);
@@ -75,6 +73,7 @@ class CitySelector {
         this.currentData   = {'regionId': null, 'city': null};
 
         this.regionsLoadBtn   = '.js-load-regions-btn';
+        this.regionSelect     = '.js-region-select';
         this.regionItemSelect = '.js-region-item';
         this.citySelect       = '.js-city-select';
         this.cityItemSelect   = '.js-city-item';
@@ -89,24 +88,22 @@ class CitySelector {
         return this.sendApiRequest(this.apiMethods['regions'])
             .then((data) => {
                 let regionsHtml = Mustache.render(regionsTmpl, {regions: data});
-                appendHtml(this._getBlockElement().querySelector(this.regionBlock), regionsHtml);
+                this._removeLocalities();
+                replaceInnerHtml(this._getBlockElement().querySelector(this.regionBlock), regionsHtml);
 
-                let regionSelects = this._getBlockElement().querySelectorAll(this.regionItemSelect);
-                for (let index in regionSelects) {
-                    if (!regionSelects.hasOwnProperty(index)) {
+                let regionSelect = this._getBlockElement().querySelector(this.regionSelect);
+                regionSelect.addEventListener('click', (event) => {
+                    let target = event.target;
+                    if (!target.classList.contains(sanitizeSelector(this.regionItemSelect))) {
                         return;
                     }
-                    regionSelects[index].addEventListener('click', (event) => {
-                        let target = event.target;
-                        this._markAsSelected(target, this.regionItemSelect)
-                            ._removeLocalities()
-                            ._showLocalities(target.dataset.regionId)
-                        ;
-                        if (this.currentData.city) {
-                            this._getSubmitBtn().disabled =  true;
-                        }
-                    });
-                }
+
+                    this._markAsSelected(target, this.regionItemSelect)
+                        ._removeLocalities()
+                        ._showLocalities(target.dataset.regionId)
+                    ;
+                    this._getSubmitBtn().disabled =  true;
+                });
             } )
             .catch((error) => { console.log(error); })
         ;
@@ -115,26 +112,26 @@ class CitySelector {
     _showLocalities(regionId) {
         return this.sendApiRequest(this.apiMethods['localities'] + '/' + regionId)
             .then((data) => {
-                this._setCurrentRegionId(regionId);
+                dispatchEvent('city_selector_region_chosen', {region: regionId});
+                this.currentData.regionId = regionId;
                 if (!data) {
                     return;
                 }
                 let citiesHtml = Mustache.render(citiesTmpl, {cities: data.list});
-                appendHtml(this._getBlockElement().querySelector(this.cityBlock), citiesHtml);
+                replaceInnerHtml(this._getBlockElement().querySelector(this.cityBlock), citiesHtml);
 
-                let citySelects = this._getBlockElement().querySelectorAll(this.cityItemSelect);
-                for (let index in citySelects) {
-                    if (!citySelects.hasOwnProperty(index)) {
+                let citySelect = this._getBlockElement().querySelector(this.citySelect);
+                citySelect.addEventListener('click', (event) => {
+                    let target = event.target;
+                    if (!target.classList.contains(sanitizeSelector(this.cityItemSelect))) {
                         return;
                     }
-                    citySelects[index].addEventListener('click', (event) => {
-                        let target = event.target;
-                        this._markAsSelected(target, this.cityItemSelect)
-                            ._setCurrentCity(target.innerHTML)
-                        ;
-                        this._getSubmitBtn().disabled = false;
-                    });
-                }
+
+                    this.currentData.city = target.innerHTML;
+                    dispatchEvent('city_selector_city_chosen', {city: target.innerHTML});
+                    this._markAsSelected(target, this.cityItemSelect);
+                    this._getSubmitBtn().disabled = false;
+                });
             } )
             .catch((error) => { console.log(error); })
         ;
@@ -175,39 +172,10 @@ class CitySelector {
 
         if (!this.hasOwnProperty('blockElem')) {
             let elem = document.createElement('div');
-            elem.id = this._getBlockHash();
             container.append(elem);
             this.blockElem = elem;
         }
         return this.blockElem;
-    }
-
-    _getBlockHash() {
-        if (!this.hasOwnProperty('hash')) {
-            this.hash = this.containerId + '-child' + Date.now();
-        }
-        return this.hash;
-    }
-
-    _setCurrentRegionId(regionId) {
-        let regionInfo = this._getInfoElement().querySelector(this.regionInfo);
-        if (regionInfo) {
-            regionInfo.innerHTML = regionId;
-        }
-        this.currentData.regionId = regionId;
-        this.currentData.city     = null;
-
-        return this;
-    }
-
-    _setCurrentCity(city) {
-        let cityInfo = this._getInfoElement().querySelector(this.cityInfo);
-        if (cityInfo) {
-            cityInfo.innerHTML = city;
-        }
-        this.currentData.city = city;
-
-        return this;
     }
 
     _getSubmitBtn() {
@@ -246,6 +214,19 @@ function appendHtml(container, html) {
     while (elem.firstChild) {
         container.appendChild(elem.firstChild);
     }
+}
+
+function replaceInnerHtml(container, html) {
+    container.innerHTML = html;
+}
+
+function sanitizeSelector(selector) {
+    return selector.replace(/[#.]/g,'');
+}
+
+function dispatchEvent(name, data) {
+    let event = new CustomEvent(name, {'detail' : data});
+    document.body.dispatchEvent(event);
 }
 
 export default CitySelector;
