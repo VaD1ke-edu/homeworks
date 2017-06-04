@@ -41,8 +41,6 @@ class CitySelector {
         loadRegions.addEventListener('click', () => {
             this._showRegions();
         });
-
-        this._getInfoElement().style.display = '';
     }
 
     destroy() {
