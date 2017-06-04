@@ -12,7 +12,7 @@ let citySelectors = [],
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('createCitySelector').addEventListener('click', () => {
         let provider     = new DataProvider('http://localhost:3000/');
-        let citySelector = new CitySelector(provider, 'info', 'citySelector', {});
+        let citySelector = new CitySelector(provider, 'citySelector', {});
         citySelectors.push(citySelector);
     });
 

@@ -15,11 +15,10 @@ class CitySelector {
      * City selector constructor
      *
      * @param {DataProvider} provider      Data provider
-     * @param {string}       infoElementId Info element html ID
      * @param {string}       containerId   Container element html ID
      * @param {Object}       apiMethods    Api methods for data provider
      */
-    constructor(provider, infoElementId, containerId, apiMethods) {
+    constructor(provider, containerId, apiMethods) {
         if (!provider) {
             const DataProvider = require('../DataProvider');
             provider = new DataProvider('http://localhost:3000/');
@@ -33,7 +32,7 @@ class CitySelector {
         apiMethods = apiMethods || {};
         apiMethods = Object.assign({}, defaultApiMethods, apiMethods);
 
-        this._initProperties(provider, infoElementId, containerId, apiMethods);
+        this._initProperties(provider, containerId, apiMethods);
 
         appendHtml(this._getBlockElement(), selectorTmpl);
 
@@ -45,7 +44,6 @@ class CitySelector {
 
     destroy() {
         this._getBlockElement().remove();
-        this.clearInfo();
     }
 
     sendApiRequest(method) {
@@ -56,16 +54,9 @@ class CitySelector {
         ;
     }
 
-    clearInfo() {
-        let infoBlock = this._getInfoElement();
-        infoBlock.querySelector(this.regionInfo).innerHTML = '';
-        infoBlock.querySelector(this.cityInfo).innerHTML   = '';
-    }
 
-
-    _initProperties(provider, infoElementId, containerId, methods) {
+    _initProperties(provider, containerId, methods) {
         this.provider      = provider;
-        this.infoElementId = infoElementId;
         this.containerId   = containerId;
         this.apiMethods    = methods;
         this.currentData   = {'regionId': null, 'city': null};
@@ -75,8 +66,6 @@ class CitySelector {
         this.regionItemSelect = '.js-region-item';
         this.citySelect       = '.js-city-select';
         this.cityItemSelect   = '.js-city-item';
-        this.regionInfo       = '.js-region-id';
-        this.cityInfo         = '.js-city-info';
         this.submitBtn        = '.js-submit-btn';
         this.regionBlock      = '#regionBlock';
         this.cityBlock        = '#cityBlock';
@@ -159,10 +148,6 @@ class CitySelector {
             this.container = document.getElementById(this.containerId);
         }
         return this.container;
-    }
-
-    _getInfoElement() {
-        return document.getElementById(this.infoElementId);
     }
 
     _getBlockElement() {
