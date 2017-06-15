@@ -34,6 +34,25 @@ class DataProvider {
             }
         }.bind(this));
     }
+
+    sendSyncRequest(apiMethod, method = 'GET', data = {}) {
+        let form = document.createElement('form');
+        form.method = method;
+        form.action = this.apiUrl + apiMethod;
+        form.style.display = 'none';
+
+        for (let key in data) {
+            if (data.hasOwnProperty(key)) {
+                let input = document.createElement('input');
+                input.value = data[key];
+                input.name  = key;
+                form.appendChild(input);
+            }
+        }
+        document.body.appendChild(form);
+
+        form.submit();
+    }
 }
 
 export default DataProvider;

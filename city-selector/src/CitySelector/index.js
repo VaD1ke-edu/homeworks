@@ -9,6 +9,18 @@ import Mustache from 'mustache';
 import selectorTmpl from 'html-loader!./templates/selector.html';
 import citiesTmpl   from 'html-loader!./templates/cities.html';
 import regionsTmpl  from 'html-loader!./templates/regions.html';
+import DataProvider from '../DataProvider';
+
+const
+    regionsLoadBtnClass   = '.js-load-regions-btn',
+    regionSelectClass     = '.js-region-select',
+    regionItemSelectClass = '.js-region-item',
+    citySelectClass       = '.js-city-select',
+    cityItemSelectClass   = '.js-city-item',
+    submitBtnClass        = '.js-submit-btn',
+    regionBlockId         = '#regionBlock',
+    cityBlockId           = '#cityBlock'
+;
 
 class CitySelector {
     /**
@@ -18,25 +30,19 @@ class CitySelector {
      * @param {string}       containerId   Container element html ID
      * @param {Object}       apiMethods    Api methods for data provider
      */
-    constructor(provider, containerId, apiMethods) {
-        if (!provider) {
-            const DataProvider = require('../DataProvider');
-            provider = new DataProvider('http://localhost:3000/');
-        }
-
-        let defaultApiMethods = {
+    constructor(provider = new DataProvider('http://localhost:3000/'), containerId, apiMethods = {}) {
+        const defaultApiMethods = {
             'regions'   : 'regions',
             'localities': 'localities',
             'save'      : 'selectedRegions'
         };
-        apiMethods = apiMethods || {};
         apiMethods = Object.assign({}, defaultApiMethods, apiMethods);
 
         this._initProperties(provider, containerId, apiMethods);
 
         appendHtml(this._getBlockElement(), selectorTmpl);
 
-        let loadRegions = this._getBlockElement().querySelector(this.regionsLoadBtn);
+        const loadRegions = this._getBlockElement().querySelector(regionsLoadBtnClass);
         loadRegions.addEventListener('click', () => {
             this._showRegions();
         });
@@ -60,15 +66,6 @@ class CitySelector {
         this.containerId   = containerId;
         this.apiMethods    = methods;
         this.currentData   = {'regionId': null, 'city': null};
-
-        this.regionsLoadBtn   = '.js-load-regions-btn';
-        this.regionSelect     = '.js-region-select';
-        this.regionItemSelect = '.js-region-item';
-        this.citySelect       = '.js-city-select';
-        this.cityItemSelect   = '.js-city-item';
-        this.submitBtn        = '.js-submit-btn';
-        this.regionBlock      = '#regionBlock';
-        this.cityBlock        = '#cityBlock';
     }
 
     _showRegions() {
@@ -76,16 +73,16 @@ class CitySelector {
             .then((data) => {
                 let regionsHtml = Mustache.render(regionsTmpl, {regions: data});
                 this._removeLocalities();
-                replaceInnerHtml(this._getBlockElement().querySelector(this.regionBlock), regionsHtml);
+                replaceInnerHtml(this._getBlockElement().querySelector(regionBlockId), regionsHtml);
 
-                let regionSelect = this._getBlockElement().querySelector(this.regionSelect);
+                let regionSelect = this._getBlockElement().querySelector(regionSelectClass);
                 regionSelect.addEventListener('click', (event) => {
                     let target = event.target;
-                    if (!target.classList.contains(sanitizeSelector(this.regionItemSelect))) {
+                    if (!target.classList.contains(sanitizeSelector(regionItemSelectClass))) {
                         return;
                     }
 
-                    this._markAsSelected(target, this.regionItemSelect)
+                    this._markAsSelected(target, regionItemSelectClass)
                         ._removeLocalities()
                         ._showLocalities(target.dataset.regionId)
                     ;
@@ -105,18 +102,18 @@ class CitySelector {
                     return;
                 }
                 let citiesHtml = Mustache.render(citiesTmpl, {cities: data.list});
-                replaceInnerHtml(this._getBlockElement().querySelector(this.cityBlock), citiesHtml);
+                replaceInnerHtml(this._getBlockElement().querySelector(cityBlockId), citiesHtml);
 
-                let citySelect = this._getBlockElement().querySelector(this.citySelect);
+                let citySelect = this._getBlockElement().querySelector(citySelectClass);
                 citySelect.addEventListener('click', (event) => {
                     let target = event.target;
-                    if (!target.classList.contains(sanitizeSelector(this.cityItemSelect))) {
+                    if (!target.classList.contains(sanitizeSelector(cityItemSelectClass))) {
                         return;
                     }
 
                     this.currentData.city = target.innerHTML;
                     dispatchEvent('city_selector_city_chosen', {city: target.innerHTML});
-                    this._markAsSelected(target, this.cityItemSelect);
+                    this._markAsSelected(target, cityItemSelectClass);
                     this._getSubmitBtn().disabled = false;
                 });
             } )
@@ -125,15 +122,11 @@ class CitySelector {
     }
 
     _saveSelectedLocalities() {
-        this.provider.sendRequest(this.apiMethods['save'], {
-            'method': 'POST',
-            'data'  : this.currentData,
-            'async' : false
-        }).then(() => { this.destroy() });
+        this.provider.sendSyncRequest(this.apiMethods['save'], 'POST', this.currentData);
     }
 
     _removeLocalities() {
-        let citySelects = this._getBlockElement().querySelectorAll(this.citySelect);
+        let citySelects = this._getBlockElement().querySelectorAll(citySelectClass);
         for (let index in citySelects) {
             if (citySelects.hasOwnProperty(index)) {
                 citySelects[index].remove();
@@ -162,10 +155,10 @@ class CitySelector {
     }
 
     _getSubmitBtn() {
-        let submitBtn = this._getBlockElement().querySelector(this.submitBtn);
+        let submitBtn = this._getBlockElement().querySelector(submitBtnClass);
         if (!submitBtn) {
             submitBtn = document.createElement('button');
-            submitBtn.className = this.submitBtn.replace('.', '');
+            submitBtn.className = submitBtnClass.replace('.', '');
             submitBtn.innerHTML = 'Сохранить';
             this._getBlockElement().append(submitBtn);
             submitBtn.addEventListener('click', () => { this._saveSelectedLocalities() });
