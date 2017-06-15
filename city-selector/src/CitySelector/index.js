@@ -42,9 +42,32 @@ class CitySelector {
 
         appendHtml(this._getBlockElement(), selectorTmpl);
 
-        const loadRegions = this._getBlockElement().querySelector(regionsLoadBtnClass);
-        loadRegions.addEventListener('click', () => {
-            this._showRegions();
+        this._getBlockElement().addEventListener('click', (event) => {
+            let target = event.target;
+
+            // load regions btn
+            if (target.classList.contains(sanitizeSelector(regionsLoadBtnClass))) {
+                this._showRegions();
+                return;
+            }
+
+            // region select
+            if (target.classList.contains(sanitizeSelector(regionItemSelectClass))) {
+                this._markAsSelected(target, regionItemSelectClass)
+                    ._removeLocalities()
+                    ._showLocalities(target.dataset.regionId)
+                ;
+                this._getSubmitBtn().disabled =  true;
+                return;
+            }
+
+            // city select
+            if (target.classList.contains(sanitizeSelector(cityItemSelectClass))) {
+                this.currentData.city = target.innerHTML;
+                dispatchEvent('city_selector_city_chosen', {city: target.innerHTML});
+                this._markAsSelected(target, cityItemSelectClass);
+                this._getSubmitBtn().disabled = false;
+            }
         });
     }
 
@@ -75,19 +98,6 @@ class CitySelector {
                 this._removeLocalities();
                 replaceInnerHtml(this._getBlockElement().querySelector(regionBlockId), regionsHtml);
 
-                let regionSelect = this._getBlockElement().querySelector(regionSelectClass);
-                regionSelect.addEventListener('click', (event) => {
-                    let target = event.target;
-                    if (!target.classList.contains(sanitizeSelector(regionItemSelectClass))) {
-                        return;
-                    }
-
-                    this._markAsSelected(target, regionItemSelectClass)
-                        ._removeLocalities()
-                        ._showLocalities(target.dataset.regionId)
-                    ;
-                    this._getSubmitBtn().disabled =  true;
-                });
             } )
             .catch((error) => { console.log(error); })
         ;
@@ -103,19 +113,6 @@ class CitySelector {
                 }
                 let citiesHtml = Mustache.render(citiesTmpl, {cities: data.list});
                 replaceInnerHtml(this._getBlockElement().querySelector(cityBlockId), citiesHtml);
-
-                let citySelect = this._getBlockElement().querySelector(citySelectClass);
-                citySelect.addEventListener('click', (event) => {
-                    let target = event.target;
-                    if (!target.classList.contains(sanitizeSelector(cityItemSelectClass))) {
-                        return;
-                    }
-
-                    this.currentData.city = target.innerHTML;
-                    dispatchEvent('city_selector_city_chosen', {city: target.innerHTML});
-                    this._markAsSelected(target, cityItemSelectClass);
-                    this._getSubmitBtn().disabled = false;
-                });
             } )
             .catch((error) => { console.log(error); })
         ;
